@@ -36,14 +36,19 @@ impl DiscordIpcClient {
 impl DiscordIpc for DiscordIpcClient {
     fn connect_ipc(&mut self) -> Result<()> {
         for i in 0..10 {
-            let path = PathBuf::from(format!(r"\\?\pipe\discord-ipc-{}", i));
+            let s = format!(r"\\?\pipe\discord-ipc-{}", i);
+            println!("Trying: {s}");
+            let path = PathBuf::from(s);
 
             match OpenOptions::new().read(true).write(true).open(&path) {
                 Ok(handle) => {
                     self.socket = Some(handle);
                     return Ok(());
                 }
-                Err(_) => continue,
+                Err(_) => {
+                    eprintln!("not found, retrying");
+                    continue
+                },
             }
         }
 
@@ -52,7 +57,7 @@ impl DiscordIpc for DiscordIpcClient {
 
     fn write(&mut self, data: &[u8]) -> Result<()> {
         let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
-
+        eprintln!("writing data: {:#?}", data);
         socket.write_all(data).map_err(Error::WriteError)?;
 
         Ok(())
