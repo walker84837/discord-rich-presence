@@ -3,7 +3,6 @@ use serde_json::json;
 use std::{
     fs::{File, OpenOptions},
     io::{Read, Write},
-    os::windows::fs::OpenOptionsExt,
     path::PathBuf,
 };
 
@@ -39,7 +38,7 @@ impl DiscordIpc for DiscordIpcClient {
         for i in 0..10 {
             let path = PathBuf::from(format!(r"\\?\pipe\discord-ipc-{}", i));
 
-            match OpenOptions::new().access_mode(0x3).open(&path) {
+            match OpenOptions::new().read(true).write(true).open(&path) {
                 Ok(handle) => {
                     self.socket = Some(handle);
                     return Ok(());
